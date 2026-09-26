@@ -1,105 +1,105 @@
 package com.groupdocs.viewer.examples;
 
+import com.groupdocs.viewer.FileType;
+import com.groupdocs.viewer.License;
 import com.groupdocs.viewer.Viewer;
 import com.groupdocs.viewer.options.HtmlViewOptions;
 import com.groupdocs.viewer.options.LoadOptions;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+
 /**
- * Demonstrates rendering Markdown documents to HTML with real-time CSS styling using GroupDocs Viewer for Java.
+ * Demonstrates how to render a Markdown file to HTML with a stylesheet using GroupDocs Viewer.
  * <p>
- * Key features:
- * <ul>
- *   <li>Load a Markdown file from local disk</li>
- *   <li>Render to HTML with embedded CSS resources</li>
- *   <li>Apply custom CSS styling via HtmlViewOptions</li>
- *   <li>Save output to the resources/output directory</li>
- * </ul>
+ * The example expects a Markdown file (<code>sample.md</code>) placed in the <code>resources/input/</code>
+ * directory (project root). Rendered HTML pages and their CSS resources are saved to <code>resources/output/</code>.
+ * </p>
  */
 public class ViewMarkdownWithCssExample {
 
-    public static void main(String[] args) {
-        applyLicense();
-        run();
-    }
+    private static final String INPUT_FILE = "resources/input/sample.md";
+    private static final String OUTPUT_DIR = "resources/output/";
+    private static final String LICENSE_FILE = "GroupDocs.Viewer.Java.lic";
 
     /**
-     * Applies a temporary or licensed key to unlock full functionality.
-     * If no license file is found, the component runs in evaluation mode.
-     * Get a free 30-day temporary license: https://purchase.groupdocs.com/temporary-license
+     * Loads the GroupDocs Viewer license if the license file exists.
+     * <p>
+     * To get a temporary license, visit:
+     * <a href="https://purchase.groupdocs.com/temporary-license/">https://purchase.groupdocs.com/temporary-license/</a>.
+     * Place the downloaded <code>GroupDocs.Viewer.Java.lic</code> file in the project root directory.
+     * Without a license the library works in evaluation mode with watermarks and other limitations.
+     * </p>
+     *
+     * @param licensePath path to the license file relative to the project root
      */
-    private static void applyLicense() {
-        String licensePath = "src/main/resources/groupdocs.viewer.lic";
+    public static void loadLicense(String licensePath) {
         File licenseFile = new File(licensePath);
         if (licenseFile.exists()) {
             try {
-                com.groupdocs.viewer.License license = new com.groupdocs.viewer.License();
+                License license = new License();
                 license.setLicense(licensePath);
-                System.out.println("License applied successfully.");
+                System.out.println("GroupDocs Viewer license loaded successfully.");
             } catch (Exception e) {
-                System.err.println("Failed to apply license: " + e.getMessage());
+                System.err.println("Failed to load GroupDocs Viewer license: " + e.getMessage());
             }
         } else {
-            System.out.println("No license file found. Running in evaluation mode.");
+            System.out.println("License file not found at " + licensePath + ". Running in evaluation mode.");
         }
     }
 
     /**
-     * Main demo method: renders a Markdown file to HTML with custom CSS styling.
+     * Renders the Markdown file to HTML and writes the stylesheet as an external resource.
+     * <p>
+     * Markdown is a text format, so the method sets {@link FileType#MD} on {@link LoadOptions}.
+     * HTML pages are saved with the pattern <code>page_{index}.html</code>. Stylesheets and other
+     * resources are saved beside them. Responsive rendering is enabled so the generated CSS
+     * adapts the page layout.
+     * </p>
      */
-    public static void run() {
-        // Input and output paths
-        String inputPath = "src/main/resources/input/sample.md";
-        String outputDir = "src/main/resources/output";
-
-        // Ensure output directory exists
+    public static void renderMarkdownWithCss() {
+        Path outDirPath = Paths.get(OUTPUT_DIR);
         try {
-            Files.createDirectories(Paths.get(outputDir));
-        } catch (IOException e) {
+            if (!Files.exists(outDirPath)) {
+                Files.createDirectories(outDirPath);
+                System.out.println("Created output directory: " + outDirPath.toAbsolutePath());
+            }
+        } catch (Exception e) {
             System.err.println("Failed to create output directory: " + e.getMessage());
             return;
         }
 
-        // -----------------------------------------------------------------
-        // Step 1. Load the Markdown file using Viewer constructor.
-        // -----------------------------------------------------------------
-        try (Viewer viewer = new Viewer(inputPath)) {
+        File inputFile = new File(INPUT_FILE);
+        if (!inputFile.exists()) {
+            System.err.println("Input file not found: " + INPUT_FILE);
+            return;
+        }
 
-            // -----------------------------------------------------------------
-            // Step 2. Configure HTML rendering options with embedded CSS resources.
-            // -----------------------------------------------------------------
-            HtmlViewOptions viewOptions = HtmlViewOptions.forEmbeddedResources();
+        String pageFilePathFormat = outDirPath.resolve("page_{0}.html").toString();
+        String resourceFilePathFormat = outDirPath.resolve("page_{0}").resolve("resource_{0}_{1}").toString();
+        String resourceUrlFormat = "page_{0}/resource_{0}_{1}";
 
-            // -----------------------------------------------------------------
-            // Step 3. Apply custom CSS styling to the rendered HTML output.
-            // -----------------------------------------------------------------
-            viewOptions.setCssResourcesPrefix("css/");
-            viewOptions.setResourceLoadingTimeout(30);
-
-            // Inject custom CSS content (e.g., Markdown-specific styling)
-            String customCss = "body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; } " +
-                    "h1, h2, h3 { color: #2c3e50; } " +
-                    "pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; } " +
-                    "code { background-color: #e8e8e8; padding: 2px 5px; border-radius: 3px; }";
-            viewOptions.setAdditionalHtmlContent("<style>" + customCss + "</style>");
-
-            // -----------------------------------------------------------------
-            // Step 4. Render the Markdown document to HTML and save to disk.
-            // -----------------------------------------------------------------
-            String outputPath = outputDir + "/sample.html";
-            viewer.view(viewOptions, outputPath);
-
-            System.out.println("Markdown file rendered to HTML with CSS styling at: " + outputPath);
-
+        // Text formats such as Markdown need an explicit file type.
+        LoadOptions loadOptions = new LoadOptions(FileType.MD);
+        try (Viewer viewer = new Viewer(INPUT_FILE, loadOptions)) {
+            HtmlViewOptions options = HtmlViewOptions.forExternalResources(
+                    pageFilePathFormat, resourceFilePathFormat, resourceUrlFormat);
+            options.setRenderResponsive(true);
+            viewer.view(options);
+            System.out.println("Document rendered successfully. Output saved to: " + outDirPath.toAbsolutePath());
         } catch (Exception e) {
-            System.err.println("Error rendering Markdown file: " + e.getMessage());
+            System.err.println("Error during rendering: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public static void main(String[] args) {
+        // Load license if available
+        loadLicense(LICENSE_FILE);
+        // Perform the rendering demonstration
+        renderMarkdownWithCss();
     }
 }

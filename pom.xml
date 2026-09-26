@@ -9,13 +9,13 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>View Markdown Files with CSS Styling Using GroupDocs Viewer for Java</name>
-    <description>Render Markdown documents to HTML with real-time CSS styling using GroupDocs Viewer for Java.</description>
+    <name>GroupDocs Viewer Java View Markdown with CSS</name>
+    <description>Showcase project demonstrating rendering of a Markdown file to HTML with a stylesheet using GroupDocs Viewer.</description>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>
@@ -39,10 +39,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.8.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -55,4 +55,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
